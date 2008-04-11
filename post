@@ -1,0 +1,132 @@
+#!/usr/bin/env ruby
+
+require "rubygems"
+require "activerecord"
+
+require File.join(File.dirname(__FILE__), "helpers")
+require local_file("models")
+
+ActiveRecord::Base.establish_connection(
+  YAML::load(File.open(local_file("database.yml")))
+)
+ActiveRecord::Base.logger = Logger.new(nil)
+
+actions = %w{ new_page create_page get_page update_page
+    get_current_version update_current_version create_version
+    destroy_page
+    new_news add_news get_latest_news update_latest_news
+    new_project create_project list_projects get_project update_project update_projects destroy_project
+    }
+action, args = (ARGV[1] || "").split(" ", 2)
+unless ARGV[0] == "-c" && actions.include?(action)
+  $stderr.puts "usage: [#{actions.join "|"}] [args...]"
+  exit 1
+end
+
+def show_errors(m)
+  $stderr.puts m.errors.full_messages.join("\n")
+  exit 1
+end
+
+case action
+when "new_page"
+  attrs = Page.new.attributes
+  attrs = attrs.merge("body" => nil, "publish_date" => Time.now,
+      "show_on_front_page"=> true, "show_in_rss" => true)
+  puts attrs.to_yaml
+
+when "create_page"
+  page_attrs = YAML::load($stdin.read)
+  version_attrs = {}
+  %w{ body publish_date show_on_front_page show_in_rss }.each do |a|
+    version_attrs[a] = page_attrs[a]
+    page_attrs.delete(a)
+  end
+  page = Page.create(page_attrs)
+  show_errors(page) if page.new_record?
+
+  version = PageVersion.create(version_attrs.merge(:page => page))
+  if version.new_record?
+    page.destroy
+    show_errors(version)
+  end
+  unless page.update_attributes(:current_version => version)
+    page.destroy
+    show_errors(page)
+  end
+  puts "Created page with id #{page.id} and slug #{page.slug}"
+
+when "get_page"
+  puts Page.find_by_slug(args).attributes.to_yaml
+
+when "update_page"
+  page = Page.find_by_slug(args)
+  show_errors(page) unless page.update_attributes(YAML::load($stdin.read))
+
+when "get_current_version"
+  page = Page.find_by_slug(args)
+  puts page.current_version.attributes.to_yaml
+
+when "update_current_version"
+  page = Page.find_by_slug(args)
+  attrs = YAML::load($stdin.read)
+  unless page.current_version.update_attributes(attrs)
+    show_errors(page.current_version)
+  end
+
+when "create_version"
+  page = Page.find_by_slug(args)
+  attrs = YAML::load($stdin.read)
+  version = page.versions.build(attrs.merge(:page_id => page.id))
+  show_errors(version) unless version.save
+  page.update_attributes(:current_version => version)
+
+when "destroy_page"
+  Page.find_by_slug(args).destroy
+
+when "new_news"
+  puts NewsUpdate.new.attributes.to_yaml
+
+when "add_news"
+  news = NewsUpdate.new(YAML::load($stdin.read))
+  show_errors(news) unless news.save
+
+when "get_latest_news"
+  puts NewsUpdate.latest.attributes.to_yaml
+
+when "update_latest_news"
+  news = NewsUpdate.latest
+  show_errors(news) unless news.update_attributes(YAML::load($stdin.read))
+
+
+when "new_project"
+  puts Project.new.attributes.to_yaml
+
+when "create_project"
+  proj = Project.new(YAML::load($stdin.read))
+  show_errors(proj) unless proj.save
+
+when "list_projects"
+	puts(Project.find(:all).inject({}) do |hash, proj|
+		hash[proj.id] = proj.attributes
+		hash
+	end.to_yaml)
+
+when "get_project"
+  puts Project.find(args).attributes.to_yaml
+
+when "update_project"
+  proj = Project.find(args)
+  show_errors(proj) unless proj.update_attributes(YAML::load($stdin.read))
+
+when "update_projects"
+	hash = YAML::load($stdin.read)
+	hash.keys.each do |id|
+		proj = Project.find(id)
+		show_errors(proj) unless proj.update_attributes(hash[id])
+	end
+
+when "destroy_project"
+  Project.find(args).destroy
+
+end

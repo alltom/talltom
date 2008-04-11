@@ -1,0 +1,23 @@
+TAllTom - AllTom on Thin
+An exercise in building a small web site on Thin itself.
+
+Please let me know if you use this! :)
+Tom Lieber <tom@alltom.com>
+
+- A few gems are required: activerecord, feed_tools, thin, haml, and
+  probably some others.
+- Load schema.sql into a database supported by ActiveRecord. The SQL
+  comes from MySQL, but uses nothing special, so it should load into
+  other database servers with little effort.
+- Move database.yml.example to database.yml and update it with
+  information on how to connect to the database you configured.
+- Start the server by running  ./alltom  . That will start an HTTP
+  server on port 8000 (configured at the bottom of the script).
+
+The "post" script is designed to be used as the login shell for an
+account that is only used for changing the content of the site. It
+allows for simple operations like adding/editing/deleting pages,
+creating new revisions of pages, adding site news, etc. Install it by
+setting up such an account, configuring the script as its shell (easiest
+way is by editing /etc/passwd), and attempting to log in as that user
+over SSH. The available arguments will be displayed.

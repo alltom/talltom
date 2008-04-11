@@ -1,0 +1,41 @@
+!!!
+%html{ :xmlns => "http://www.w3.org/1999/xhtml", :lang => "en", 'xml:lang' => "en" }
+  %head
+    %title= title
+    %meta{ "http-equiv" => "Content-Type", :content => "text/html; charset=utf-8" }/
+    %meta{ :name => "author", :content => "Tom Lieber" }/
+    %link{ :rel => "stylesheet", :href => "/stylesheets/main.css", :type => "text/css", :media => "screen,projection" }/
+    %link{ :rel => "stylesheet", :href => "/stylesheets/print.css", :type => "text/css", :media => "print" }/
+    %link{ :rel => "alternate", :href => "/pages.atom", :type => "application/atom+xml", :title => "All Pages (Atom)" }/
+    %link{ :rel => "openid.server", :href => "http://www.myopenid.com/server" }/
+    %link{ :rel => "openid.delegate", :href => "http://alltom.myopenid.com/" }/
+    - if defined?(description) && !description.nil? && description.length > 0
+      %meta{ :name => "description", :content => description }/
+  %body
+    #container
+      #header
+        %h1
+          %a{ :href => "/" } AllTom.com
+        %p.tagline
+          Tom Says:
+          %strong Code something crazy every day!
+        %p.navigation
+          Navigation:
+          = succeed "," do
+            %a{ :href => "/" } Home
+          = succeed "," do
+            %a{ :href => "/pages" } Page Index
+          %a{ :href => "/pages/about" } About
+      #body
+        = body
+      %hr/
+      #footer
+        %p
+          &copy;
+          = Time.now.strftime("%Y")
+          Tom Lieber. If you want permission to use something, or
+          just want to contact me, e-mail me at
+          = succeed "." do
+            %a{ :href => "mailto:tom@alltom.com" } tom@alltom.com
+        %p
+          %a{ :href => "http://anon@hg.littlecode.org/hgwebdir.cgi/talltom-tom/" } See this site's source on LittleCode!

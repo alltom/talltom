@@ -1,0 +1,128 @@
+#!/usr/bin/env ruby
+
+require "rubygems"
+require "thin"
+require "haml"
+require "activerecord"
+require "feed_tools"
+
+require "models"
+require "helpers"
+
+ActiveRecord::Base.establish_connection(
+  YAML::load(File.open(local_file("database.yml")))
+)
+ActiveRecord::Base.logger = Logger.new(nil)
+
+class AllTomAdapter
+  def call(env)
+    env[:path] = env["PATH_INFO"].split('/')
+    env[:path].shift # path starts with a slash
+    @helpers = ViewHelpers.new
+
+    return home(env) if env[:path] == [] # /
+    return pages(env) if env[:path] == ["pages"] # /pages
+    return page(env) if env[:path].first == "pages" # /pages/...
+    return feed(env) if env[:path].first =~ /^pages\.(atom|rss)$/ # /pages.(atom|rss)
+    return not_found(env)
+  end
+
+  def render(code, body, options = {})
+    options = {
+          'Content-Type'   => 'text/html',
+          'Content-Length' => body.size.to_s,
+        }.merge(options)
+    [code, options, body]
+  end
+
+  def haml(template, vars = {})
+    h = Haml::Engine.new(
+        File.read(local_file(File.join("templates", template + ".haml")))
+        )
+    h.render(@helpers, vars)
+  end
+
+  def layout(layout_vars, template, vars = {})
+    haml("layout", { :body => haml(template, vars), :title => "AllTom.com" }.merge(layout_vars))
+  end
+
+  # pages
+
+  def home(env)
+    site_description = "Blog of a dare-devil programmer tempting fate " +
+        "by pulling the stunts you're too afraid to try! Starring C, " +
+        "Ruby, and Awk! Graphics, sound, and computer interfaces!"
+    render(200, layout({:description => site_description}, "home",
+        { :news => NewsUpdate.latest, :page_count => Page.count,
+        :pages => Page.find_recent, :projects => Project.find_all }))
+  end
+
+  def pages(env)
+    render(200, layout({ :title => "AllTom.com - Page Index" }, "pages",
+        { :pages => Page.find_all }))
+  end
+
+  def page(env)
+    page = Page.find_by_slug(env[:path][1])
+    if page
+      render 200, layout({ :title => "AllTom.com - " + page.title,
+          :description => page.description },
+          "page", { :page => page })
+    else
+      not_found(env)
+    end
+  end
+
+  def feed(env)
+    feed = generate_feed(Page.find_for_rss)
+    body = feed.build_xml(env[:path].first.split(".").last)
+    render 200, body, { "Content-Type" => "application/xml" }
+  end
+
+  def not_found(env)
+    render 404, "not found", { "Content-Type" => "text/plain" }
+  end
+
+  # Feed cruft
+
+  def generate_feed(pages)
+    feed = FeedTools::Feed.new
+    feed.id = "http://alltom.com/"
+    feed.title = "AllTom.com" 
+    feed.subtitle = "Pages, Posts, and Preconceptions" 
+    feed.author.name = "Tom Lieber" 
+    feed.link = "http://alltom.com/" 
+
+    pages.each do |page|
+      entry = FeedTools::FeedItem.new
+      entry.id = "http://alltom.com/pages/" + page.slug + "::" + page.current_version.id.to_s
+      entry.title = page.title
+      entry.author = "Tom Lieber"
+      entry.published = page.current_version.publish_date
+      entry.updated = page.current_version.publish_date
+      entry.link = "http://alltom.com/pages/" + page.slug
+
+      body = @helpers.absolutify_urls(page.current_version.body)
+      if page.modified?
+        if page.current_version.edit_comment.blank?
+          body = "<p>Updated #{page.current_version.publish_date.pretty_format}</p>" + body
+        else
+          body = "<p>Updated #{page.current_version.publish_date.pretty_format}: #{page.current_version.edit_comment}</p>" + body
+        end
+      end
+      entry.content = body
+
+      feed.entries << entry
+    end
+
+    feed
+  end
+end
+
+app = Rack::URLMap.new("/images" => Rack::File.new(File.join(File.dirname(__FILE__), "images")),
+                       "/files" => Rack::File.new(File.join(File.dirname(__FILE__), "files")),
+                       "/stylesheets" => Rack::File.new(File.join(File.dirname(__FILE__), "stylesheets")),
+                       "/javascripts" => Rack::File.new(File.join(File.dirname(__FILE__), "javascripts")),
+                       "/" => AllTomAdapter.new
+                       )
+Thin::Server.new("localhost", 8000, app).start

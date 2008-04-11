@@ -1,0 +1,13 @@
+%hr/
+%h2 All Pages
+%p
+  My site has
+  = pages.length + 2
+  pages (including this one)! You can
+  = succeed '.' do
+    %a{ :href => "pages.atom" } subscribe to my updates with Atom
+%ul
+  - pages.each do |page|
+    %li{ :class => (page.current_version.show_on_front_page ? "noncrap" : "crap") }
+      %a{ :href => "pages/#{page.slug}" }= page.title
+      %span.dateline= published_line(page)

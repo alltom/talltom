@@ -1,0 +1,14 @@
+%hr/
+%h2= page.title
+~ adjust_header_levels(page.current_version.body)
+%p.dateline
+  Posted
+  = page.versions.first.publish_date.pretty_format + "."
+  - if page.modified?
+    Updated
+    = succeed "." do
+      - if page.current_version.edit_comment.blank?
+        = published_line(page, false)
+      - else
+        = published_line(page, false) + ": "
+        = page.current_version.edit_comment

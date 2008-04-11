@@ -1,0 +1,63 @@
+div#container {
+	margin-left: 1.5in;
+	margin-right: .5in;
+}
+
+h1, h2, h3, h4, div#footer, hr {
+	margin-left: -.4in;
+}
+
+h1 {
+  margin-bottom: 0;
+}
+
+h1 a {
+	color: #000;
+}
+
+div#footer {
+	margin-bottom: .3in;
+}
+
+.print-only {
+  display: none;
+}
+
+hr {
+  clear: both;
+}
+
+p.tagline {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-style: italic;
+}
+p.navigation {
+  margin-top: 0;
+}
+
+pre {
+	margin-left: .2in;
+}
+
+.dateline {
+  font-size: small;
+  font-style: italic;
+}
+
+li.noncrap {
+  background-color: #ffa;
+  font-weight: bold;
+}
+
+span.footnote {
+	font-size: small;
+}
+
+span.linknum, div.links {
+	display: none;
+}
+
+dt {
+  font-weight: bold;
+}

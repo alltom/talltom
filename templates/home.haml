@@ -1,0 +1,36 @@
+- unless news.nil?
+  %hr/
+  = news.body
+  %p
+    &#8212;
+    = news.created_on.pretty_date_format
+%hr/
+%h2 Recent Pages
+%p
+  My site has
+  = page_count + 2
+  pages (including this one)! Here are some of the most recent, but you
+  can see the rest at
+  = succeed "." do
+    %a{ :href => "/pages" } at the page index
+  You can also
+  = succeed "." do
+    %a{ :href => "pages.atom" } subscribe to my updates with Atom
+%ul
+  - pages.each do |page|
+    %li{ :class => (page.current_version.show_on_front_page ? "noncrap" : "crap") }
+      %a{ :href => "pages/#{page.slug}" }= page.title
+      %span.dateline= published_line(page)
+%hr/
+%h2 Projects
+%dl
+  - projects.each do |project|
+    %dt
+      - if project.page.nil?
+        = project.title
+      - else
+        %a{ :href => "/pages/#{project.page.slug}" }= project.title
+    - unless project.status.nil? || project.status.length == 0
+      %dd
+        = project.status
+        %span.dateline= "&#8212;" + project.updated_at.pretty_date_format
