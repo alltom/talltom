@@ -43,7 +43,7 @@ class AllTomAdapter
   end
 
   def layout(layout_vars, template, vars = {})
-    haml("layout", { :body => haml(template, vars), :title => "AllTom.com" }.merge(layout_vars))
+    haml("layout", { :body => haml(template, vars), :title => "Tom Lieber's AllTom.com" }.merge(layout_vars))
   end
 
   # pages
@@ -58,14 +58,14 @@ class AllTomAdapter
   end
 
   def pages(env)
-    render(200, layout({ :title => "AllTom.com - Page Index" }, "pages",
+    render(200, layout({ :title => "Tom Lieber's AllTom.com - Page Index" }, "pages",
         { :pages => Page.find_all }))
   end
 
   def page(env)
     page = Page.find_by_slug(env[:path][1])
     if page
-      render 200, layout({ :title => "AllTom.com - " + page.title,
+      render 200, layout({ :title => "Tom Lieber's AllTom.com - " + page.title,
           :description => page.description },
           "page", { :page => page })
     else
@@ -88,8 +88,8 @@ class AllTomAdapter
   def generate_feed(pages)
     feed = FeedTools::Feed.new
     feed.id = "http://alltom.com/"
-    feed.title = "AllTom.com" 
-    feed.subtitle = "Pages, Posts, and Preconceptions" 
+    feed.title = "Tom Lieber's AllTom.com" 
+    feed.subtitle = "Pages, Posts" 
     feed.author.name = "Tom Lieber" 
     feed.link = "http://alltom.com/" 
 
