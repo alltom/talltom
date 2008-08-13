@@ -25,6 +25,8 @@
             %a{ :href => "/" } Home
           = succeed "," do
             %a{ :href => "/pages" } Page Index
+            = surround "(", ")" do
+              %a{ :href => "/pages.atom" } Atom Feed
           %a{ :href => "/pages/about" } About
       #body
         = body
