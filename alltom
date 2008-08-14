@@ -119,10 +119,10 @@ class AllTomAdapter
   end
 end
 
-app = Rack::URLMap.new("/images" => Rack::File.new(File.join(File.dirname(__FILE__), "images")),
-                       "/files" => Rack::File.new(File.join(File.dirname(__FILE__), "files")),
-                       "/stylesheets" => Rack::File.new(File.join(File.dirname(__FILE__), "stylesheets")),
-                       "/javascripts" => Rack::File.new(File.join(File.dirname(__FILE__), "javascripts")),
+app = Rack::URLMap.new("/images" => Rack::File.new(local_file("images")),
+                       "/files" => Rack::File.new(local_file("files")),
+                       "/stylesheets" => Rack::File.new(local_file("stylesheets")),
+                       "/javascripts" => Rack::File.new(local_file("javascripts")),
                        "/" => AllTomAdapter.new
                        )
 Thin::Server.new("localhost", 8000, app).start
